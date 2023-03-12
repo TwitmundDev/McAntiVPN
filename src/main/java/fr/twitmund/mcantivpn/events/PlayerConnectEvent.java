@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
-import java.net.InetAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,20 +20,18 @@ public class PlayerConnectEvent implements Listener {
     @EventHandler
     public static void onPlayerConnect(AsyncPlayerPreLoginEvent e) {
         String playerIp = e.getAddress().toString();
-        InetAddress playerIpInet = e.getAddress();
-        System.out.println(String.valueOf(playerIpInet));
-        if (isPlayerAlreadyRegistered(playerIpInet)){
-            if (Main.getIpList().get(playerIpInet).equals(false)){
+
+        if (isPlayerAlreadyRegistered(playerIp)){
+            if (Main.getIpList().get(playerIp).equals(false)){
                 notifyWhenVPNConnected(playerIp , e.getName());
                 e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER ,Main.getGetKickMessage());
-            } else if (Main.getIpList().get(playerIpInet).equals(true)){
             }
         }else {
             try {
                 if(ApiRequester.requestApi(playerIp).equals("0")){
-                    Main.addIpOnList(String.valueOf(playerIpInet), true);
+                    Main.addIpOnList(String.valueOf(playerIp), true);
                 } else if (ApiRequester.requestApi(playerIp).equals("1")) {
-                    Main.addIpOnList(String.valueOf(playerIpInet), false);
+                    Main.addIpOnList(String.valueOf(playerIp), false);
                     notifyWhenVPNConnected(playerIp , e.getName());
                     e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER ,Main.getGetKickMessage());
                 }
@@ -49,26 +46,18 @@ public class PlayerConnectEvent implements Listener {
      * @param address InetAddress
      * @return boolean
      */
-    public static boolean isPlayerAlreadyRegistered(InetAddress address){
-
-        if ((Main.getIpList().containsKey(address))) {
-            return true;
-        }else {
-            return  false;
-        }
+    public static boolean isPlayerAlreadyRegistered(String address){
+        return Main.getIpList().containsKey(address);
     }
 
     public static void notifyWhenVPNConnected(String ip , String username){
         String notifyPermission = Main.getPermissionNotify();
         String message = Main.getPlayerWithVPNTriedToConnectMessage().replace("%ip" , ip).replace("%username" , username);
         Bukkit.getOnlinePlayers().forEach(player ->{
-            if (player.hasPermission(notifyPermission)){
+            if (player.hasPermission(notifyPermission)) {
                 player.sendMessage(message);
-            }else return;
+            }
         });
     }
-
-
-
 
 }

@@ -24,8 +24,6 @@ repositories {
 
 dependencies {
     compileOnly "org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT"
-    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
-    implementation 'com.google.code.gson:gson:2.10'
 }
 
 def targetJavaVersion = 17

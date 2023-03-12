@@ -1,34 +1,38 @@
 package fr.twitmund.mcantivpn;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import fr.twitmund.mcantivpn.commands.ShowIpList;
-import fr.twitmund.mcantivpn.manager.EventManager;
+import fr.twitmund.mcantivpn.events.PlayerConnectEvent;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+
 
 import java.io.*;
-import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class Main extends JavaPlugin {
 
-    private static String apiKey;
-    private String pathOfJson =  this.getDataFolder().getAbsolutePath()+"/savedIps.json";
+    private final Path pathOfJson = this.getDataFolder().toPath().resolve("savedIps.json");
     private static final Logger log = Logger.getLogger("MaliseAntiVpn");
-
-    private static final HashMap<String,Boolean> ipList = new HashMap<>();
+    private static final HashMap<String, Boolean> ipList = new HashMap<>();
 
     private static String API_KEY;
     private static String getKickMessage;
-    private static String PermissionCommand;
+    private static String permissionCommand;
     private static String dontHavePermissionMessage;
-    private static String PermissionNotify;
-    private static String PlayerWithVPNTriedToConnectMessage;
-
-
-
+    private static String permissionNotify;
+    private static String playerWithVPNTriedToConnectMessage;
 
 
     private static Main instance;
@@ -36,59 +40,50 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
+
         instance = this;
         log.log(Level.WARNING, """
                 If its your first load of the plugin please please add your api key and reload the plugin or restart the server
                 """);
         saveDefaultConfig();
-        API_KEY = this.getConfig().getString("API_KEY").replace("&", "§");
-        getKickMessage = this.getConfig().getString("KickMessage").replace("&", "§");
-        PermissionCommand = this.getConfig().getString("CommandPermission").replace("&", "§");
-        PermissionNotify = this.getConfig().getString("PermissionNotify").replace("&", "§");
-        dontHavePermissionMessage = this.getConfig().getString("DontHavePermissionMessage").replace("&", "§");
-        PlayerWithVPNTriedToConnectMessage = this.getConfig().getString("PlayerWithVPNTriedToConnect").replace("&", "§");
-        apiKey = this.getConfig().getString("API_KEY");
+        API_KEY = this.getConfig().getString("API_KEY");
+        getKickMessage = ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("KickMessage", "error"));
+        permissionCommand = ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("CommandPermission", "error"));
+        permissionNotify = ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("PermissionNotify", "error"));
+        dontHavePermissionMessage = ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("DontHavePermissionMessage", "error"));
+        playerWithVPNTriedToConnectMessage = ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("PlayerWithVPNTriedToConnect", "error"));
 
-        try {
-            JSONParser parser = new JSONParser();
-            Object obj = parser.parse(new FileReader(pathOfJson));
-            JSONObject jsonObject = (JSONObject) obj;
+        if (Files.exists(pathOfJson)) {
+            try {
+                JsonObject obj = JsonParser.parseReader(Files.newBufferedReader(pathOfJson)).getAsJsonObject();
 
-            for (Object key : jsonObject.keySet()) {
-                String keyStr = (String) key;
-                Boolean keyvalue = (Boolean) jsonObject.get(keyStr);
-                ipList.put(keyStr, keyvalue);
+                for (String key : obj.keySet()) {
+                    Boolean keyValue = obj.get(key).getAsBoolean();
+                    ipList.put(key, keyValue);
+                }
+                log.log(Level.INFO, "File successfully read and written into the hashmap");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            log.log(Level.INFO, "File successfully read and written into the hashmap");
-        } catch (Exception e) {
-            if (e.getCause() instanceof FileNotFoundException ){
-                log.log(Level.SEVERE, "The File Does not exist if its your first load its normal");
-            }
-            e.printStackTrace();
+
         }
 
 
-        EventManager.RegisterEvents();
+        PluginManager pm = Bukkit.getServer().getPluginManager();
+        pm.registerEvents(new PlayerConnectEvent(), this);
+
         log.info("Plugin enabled");
-        log.info(this.getDataFolder().getAbsolutePath());
-        log.info(pathOfJson);
         getCommand("showIpList").setExecutor(new ShowIpList());
-
-
-
     }
 
     @Override
     public void onDisable() {
-        JSONObject savingAllIps = new JSONObject();
-        ipList.forEach((k,v) ->{
-            savingAllIps.put(k, v);
-        });
+        JsonObject savingAllIps = new JsonObject();
+        ipList.forEach(savingAllIps::addProperty);
         try {
-            FileWriter file = new FileWriter(pathOfJson);
-            file.write(savingAllIps.toJSONString());
-            file.close();
-            log.log(Level.INFO,"The file has been wiritten and saved");
+            Files.writeString(pathOfJson, savingAllIps.toString(), StandardCharsets.UTF_8, StandardOpenOption.WRITE);
+            log.log(Level.INFO, "The file has been wiritten and saved");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -98,30 +93,36 @@ public final class Main extends JavaPlugin {
     public static Main getInstance() {
         return instance;
     }
+
     public static String getGetKickMessage() {
         return getKickMessage;
     }
+
     public static HashMap<String, Boolean> getIpList() {
         return ipList;
     }
+
     public static String getAPI_KEY() {
         return API_KEY;
     }
+
     public static String getPermissionCommand() {
-        return PermissionCommand;
+        return permissionCommand;
     }
+
     public static String getPermissionMessage() {
         return dontHavePermissionMessage;
     }
+
     public static String getPermissionNotify() {
-        return PermissionNotify;
+        return permissionNotify;
     }
 
     public static String getPlayerWithVPNTriedToConnectMessage() {
-        return PlayerWithVPNTriedToConnectMessage;
+        return playerWithVPNTriedToConnectMessage;
     }
 
-    public static void addIpOnList(String address , Boolean value) {
+    public static void addIpOnList(String address, Boolean value) {
         ipList.put(address, value);
     }
 }
