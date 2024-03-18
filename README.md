@@ -14,4 +14,4 @@ The plugin have a config.yml file so you can customise the plugin by using the &
 - **API_KEY**: You need to put your api key here it can be found on the IPHub website
 
 
-![Screenshots](https://cdn.discordapp.com/attachments/698616193661140995/1084205502612914236/image.png)
+![Screenshots](https://cdn.discordapp.com/attachments/698616193661140995/1084205502612914236/image.png?ex=6608708f&is=65f5fb8f&hm=abc16583f11bb03d73e65eff06d6f3baad219c01800e75ca49090a99e39b387d&)
