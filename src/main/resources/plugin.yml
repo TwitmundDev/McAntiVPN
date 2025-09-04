@@ -1,0 +1,7 @@
+name: mcAntiVPN
+version: '${version}'
+main: fr.twitmund.mcAntiVPN.Main
+api-version: 1.19
+commands:
+  showIpList:
+    description: show all ip addresses

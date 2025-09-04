@@ -1,0 +1,10 @@
+API_KEY: ""
+KickMessage: "VPN's aren't allowed here"
+CommandPermission: "mcAntiVPN.command"
+PermissionNotify: "mcAntiVPN.notify"
+DontHavePermissionMessage: "&4Sorry but you don't have permission to do that"
+
+# PLEASE USE THE %ip and %username AND DON'T CHANGE IT I WILL NOT BE RESPONSIBLE IF IT DOESN'T WORK
+# %ip = ip of the player who tried to connect
+# %username = username of the player who tried to connect
+PlayerWithVPNTriedToConnect: "The player %username with the ip %ip tried to connect but has been blocked by the Anti-VPN"
